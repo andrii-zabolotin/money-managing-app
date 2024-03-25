@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "money-managing-app"
+version = "0.1.0"
+description = ""
+authors = ["Andrii Zabolotin <fenics7511@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.110.0"
+black = "^24.3.0"
+alembic = "^1.13.1"
+asyncpg = "^0.29.0"
+pydantic-settings = "^2.2.1"
+uvicorn = "^0.29.0"
+SQLAlchemy = "^2.0.29"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.1.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
