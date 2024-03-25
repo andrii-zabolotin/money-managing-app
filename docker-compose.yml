@@ -17,7 +17,7 @@ services:
       - DB_NAME=devdb
       - DB_USER=devuser
       - DB_PASS=changeme
-      - DB_URL=postgresql+asyncpg://devuser:changeme@db:5432/devdb
+      - DB_URL=postgresql+asyncpg://devuser:changeme@db:5432/devdb?async_fallback=True
     depends_on:
       - db
   db:
