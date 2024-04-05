@@ -10,7 +10,7 @@ services:
       - ./tests:/app/tests
       - .pytest_cache:/app/.pytest_cache
     command: >
-      sh -c "while ! nc -z test_db 5432; do sleep 1; done; pytest -v --disable-warnings tests/ "
+      sh -c "while ! nc -z test_db 5432; do sleep 1; done; pytest -v -s --disable-warnings tests/"
     environment:
       - TEST_DB_HOST=test_db
       - TEST_DB_NAME=test_devdb
