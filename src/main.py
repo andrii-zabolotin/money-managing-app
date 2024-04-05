@@ -1,5 +1,6 @@
 from fastapi_users import FastAPIUsers
 from fastapi import FastAPI
+from starlette.staticfiles import StaticFiles
 
 from src.auth.auth import auth_backend
 from src.auth.manager import get_user_manager
@@ -10,6 +11,8 @@ from src.models import User
 app = FastAPI(
     title="Money Managing App"
 )
+
+app.mount("/static", StaticFiles(directory="src/static"), name="static")
 
 fastapi_users = FastAPIUsers[User, int](
     get_user_manager,
