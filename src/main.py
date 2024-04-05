@@ -6,6 +6,7 @@ from src.auth.manager import get_user_manager
 from src.auth.schemas import UserRead, UserCreate, UserUpdate
 from src.models import User
 
+
 app = FastAPI(
     title="Money Managing App"
 )
