@@ -18,7 +18,8 @@ class User(SQLAlchemyBaseUserTable[int], Base):
 
 
 class Currency(Base):
-    name: Mapped[str] = mapped_column(unique=True, nullable=False)
+    name: Mapped[str] = mapped_column(nullable=False)
+    symbol: Mapped[str] = mapped_column(unique=True, nullable=False, index=True)
 
 
 class Account(Base):
