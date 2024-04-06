@@ -1,11 +1,8 @@
-from fastapi_users import FastAPIUsers
 from fastapi import FastAPI
 from starlette.staticfiles import StaticFiles
 
-from src.auth.auth import auth_backend
-from src.auth.manager import get_user_manager
+from src.auth.auth import auth_backend, fastapi_users
 from src.auth.schemas import UserRead, UserCreate, UserUpdate
-from src.models import User
 
 
 app = FastAPI(
@@ -14,10 +11,6 @@ app = FastAPI(
 
 app.mount("/static", StaticFiles(directory="src/static"), name="static")
 
-fastapi_users = FastAPIUsers[User, int](
-    get_user_manager,
-    [auth_backend],
-)
 
 app.include_router(
     fastapi_users.get_auth_router(auth_backend),
