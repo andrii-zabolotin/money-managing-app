@@ -2,10 +2,18 @@ from pydantic import BaseModel
 
 
 class CurrencyRead(BaseModel):
+    id: int
     name: str
+    symbol: str
+
+
+class CurrencyManage(BaseModel):
+    name: str
+    symbol: str
 
 
 class AccountRead(BaseModel):
+    id: int
     name: str
     note: str
     summ: float
