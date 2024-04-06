@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from starlette.staticfiles import StaticFiles
+from src.app.router import currency_router, account_router
 
 from src.auth.auth import auth_backend, fastapi_users
 from src.auth.schemas import UserRead, UserCreate, UserUpdate
@@ -29,6 +30,9 @@ app.include_router(
     prefix="/users",
     tags=["users"],
 )
+
+app.include_router(currency_router, prefix="/currency", tags=["currency"])
+app.include_router(account_router, prefix="/account", tags=["account"])
 
 
 @app.get("/ping")
