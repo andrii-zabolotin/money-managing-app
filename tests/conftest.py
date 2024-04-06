@@ -2,6 +2,7 @@ from typing import AsyncGenerator
 import asyncio
 from httpx import AsyncClient
 import pytest
+from sqlalchemy import NullPool
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from starlette.testclient import TestClient
@@ -13,7 +14,7 @@ from src.models import Base
 
 # Database
 # Creates an asynchronous SQLAlchemy engine for the test database using the URL from the settings object.
-test_engine = create_async_engine(settings.db_url)
+test_engine = create_async_engine(settings.db_url, poolclass=NullPool)
 # SQLAlchemy session factory using the created test_engine.
 test_SessionLocal = sessionmaker(test_engine, class_=AsyncSession, autocommit=False, autoflush=False, expire_on_commit=False)
 # Binds the SQLAlchemy models' metadata to the test_engine.
