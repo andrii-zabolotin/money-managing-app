@@ -94,3 +94,30 @@ class SubCategoryCreate(BaseModel):
 
 class SubCategoryUpdate(BaseModel):
     name: str
+
+
+class OperationRead(BaseModel):
+    id: int
+    summ: float
+    type: bool
+    note: str = None
+    fk_account_id: int
+    fk_category_id: int
+    fk_sub_category_id: int
+    fk_user_id: int
+
+
+class OperationCreate(BaseModel):
+    summ: float
+    type: bool
+    note: str = None
+    fk_account_id: int
+    fk_category_id: int
+    fk_sub_category_id: int
+    fk_user_id: int
+
+
+class OperationUpdate(BaseModel):
+    summ: float
+    type: bool
+    note: str = None
