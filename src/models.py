@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTable
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import DeclarativeBase, mapped_column, Mapped, declared_attr
@@ -47,3 +49,14 @@ class Category(Base):
 class SubCategory(Base):
     name: Mapped[str] = mapped_column(nullable=False, unique=False)
     fk_category_id: Mapped[int] = mapped_column(ForeignKey('category.id'), nullable=False)
+
+
+class Operation(Base):
+    summ: Mapped[float]
+    time_date: Mapped[datetime]
+    type: Mapped[bool]
+    note: Mapped[str] = mapped_column(nullable=True)
+    fk_account_id: Mapped[int] = mapped_column(ForeignKey('account.id'), nullable=False)
+    fk_category_id: Mapped[int] = mapped_column(ForeignKey('category.id'), nullable=False)
+    fk_sub_category_id: Mapped[int] = mapped_column(ForeignKey('subcategory.id'), nullable=False)
+    fk_user_id: Mapped[int] = mapped_column(ForeignKey('user.id'), nullable=False)
