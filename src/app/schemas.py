@@ -7,9 +7,14 @@ class CurrencyRead(BaseModel):
     symbol: str
 
 
-class CurrencyManage(BaseModel):
+class CurrencyCreate(BaseModel):
     name: str
     symbol: str
+
+
+class CurrencyUpdate(BaseModel):
+    name: str = None
+    symbol: str = None
 
 
 class AccountRead(BaseModel):
