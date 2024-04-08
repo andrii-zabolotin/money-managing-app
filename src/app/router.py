@@ -17,6 +17,7 @@ account_router = APIRouter()
 savings_account_router = APIRouter()
 category_router = APIRouter()
 sub_category_router = APIRouter()
+operations_router = APIRouter()
 
 
 @currency_router.get("/list", response_model=List[CurrencyRead])
@@ -27,7 +28,7 @@ async def currency_list(session: AsyncSession = Depends(get_async_session)):
 
 
 @currency_router.get("/list/{currency_id}", response_model=CurrencyRead)
-async def currency_list(currency_id: int, session: AsyncSession = Depends(get_async_session)):
+async def currency_get(currency_id: int, session: AsyncSession = Depends(get_async_session)):
     stmt = select(Currency).where(Currency.id == currency_id)
     result = await session.execute(stmt)
     currency = result.scalar_one_or_none()
@@ -81,7 +82,7 @@ async def currency_delete(
     currency = result.scalar_one_or_none()
     if not currency:
         raise HTTPException(status_code=404, detail=f"Currency not found!")
-    stmt = delete(Currency).where(Currency.id ==currency_id)
+    stmt = delete(Currency).where(Currency.id == currency_id)
     await session.execute(stmt)
     await session.commit()
     return JSONResponse(status_code=200, content={"message": "Currency successfully deleted!"})
@@ -98,7 +99,7 @@ async def account_list(
 
 
 @account_router.get("/{account_id}", response_model=AccountRead)
-async def account(
+async def account_get(
         account_id: int,
         user: User = Depends(current_user),
         session: AsyncSession = Depends(get_async_session)
@@ -130,7 +131,7 @@ async def account_update(
         user: User = Depends(current_user),
         session: AsyncSession = Depends(get_async_session)
 ) -> JSONResponse:
-    stmt = select(Account).where(Account.id == account_id)
+    stmt = select(Account).where(Account.id == account_id, Account.fk_user_id == user.id)
     result = await session.execute(stmt)
     account = result.scalar_one_or_none()
     if not account:
@@ -148,12 +149,12 @@ async def account_delete(
         user: User = Depends(current_user),
         session: AsyncSession = Depends(get_async_session)
 ):
-    stmt = select(Account).where(Account.id == account_id)
+    stmt = select(Account).where(Account.id == account_id, Account.fk_user_id == user.id)
     result = await session.execute(stmt)
     account = result.scalar_one_or_none()
     if not account:
         raise HTTPException(status_code=404, detail=f"Account not found!")
-    stmt = delete(Account).where(Account.id ==account_id)
+    stmt = delete(Account).where(Account.id == account_id)
     response = await session.execute(stmt)
     await session.commit()
     return JSONResponse(status_code=200, content={"message": "Account successfully deleted!"})
@@ -170,12 +171,13 @@ async def savings_account_list(
 
 
 @savings_account_router.get("/{savings_account_id}", response_model=SavingsAccountRead)
-async def savings_account_list(
+async def savings_account_get(
         savings_account_id: int,
         user: User = Depends(current_user),
         session: AsyncSession = Depends(get_async_session)
 ):
-    stmt = select(SavingsAccount).join(Account).filter(Account.fk_user_id == user.id).where(SavingsAccount.id == savings_account_id)
+    stmt = select(SavingsAccount).join(Account).filter(Account.fk_user_id == user.id).where(
+        SavingsAccount.id == savings_account_id)
     result = await session.execute(stmt)
     savings_account = result.scalar_one_or_none()
     if not savings_account:
@@ -210,12 +212,14 @@ async def update_savings_account(
         user: User = Depends(current_user),
         session: AsyncSession = Depends(get_async_session)
 ):
-    stmt = select(SavingsAccount).join(Account).filter(Account.fk_user_id == user.id).where(SavingsAccount.id == savings_account_id)
+    stmt = select(SavingsAccount).join(Account).filter(Account.fk_user_id == user.id).where(
+        SavingsAccount.id == savings_account_id)
     result = await session.execute(stmt)
     savings_account = result.scalar_one_or_none()
     if not savings_account:
         raise HTTPException(status_code=404, detail="Savings-account not found")
-    stmt = update(SavingsAccount).where(SavingsAccount.id == savings_account_id).values(**savings_account_in_data.model_dump(exclude_unset=True))
+    stmt = update(SavingsAccount).where(SavingsAccount.id == savings_account_id).values(
+        **savings_account_in_data.model_dump(exclude_unset=True))
     await session.execute(stmt)
     await session.commit()
     return JSONResponse({"message": "Savings-account successfully updated!"}, status_code=200)
@@ -227,7 +231,8 @@ async def update_savings_account(
         user: User = Depends(current_user),
         session: AsyncSession = Depends(get_async_session)
 ):
-    stmt = select(SavingsAccount).join(Account).filter(Account.fk_user_id == user.id).where(SavingsAccount.id == savings_account_id)
+    stmt = select(SavingsAccount).join(Account).filter(Account.fk_user_id == user.id).where(
+        SavingsAccount.id == savings_account_id)
     result = await session.execute(stmt)
     savings_account = result.scalar_one_or_none()
     if not savings_account:
@@ -249,7 +254,7 @@ async def category_list(
 
 
 @category_router.get("/{category_id}", response_model=CategoryRead)
-async def category_list(
+async def category_get(
         category_id: int,
         user: User = Depends(current_user),
         session: AsyncSession = Depends(get_async_session)
@@ -281,7 +286,7 @@ async def category_update(
         user: User = Depends(current_user),
         session: AsyncSession = Depends(get_async_session)
 ):
-    stmt = select(Category).where(Category.id == category_id)
+    stmt = select(Category).where(Category.id == category_id, Category.fk_user_id == user.id)
     result = await session.execute(stmt)
     category = result.scalar_one_or_none()
     if not category:
@@ -298,7 +303,7 @@ async def category_delete(
         user: User = Depends(current_user),
         session: AsyncSession = Depends(get_async_session)
 ):
-    stmt = select(Category).where(Category.id == category_id)
+    stmt = select(Category).where(Category.id == category_id, Category.fk_user_id == user.id)
     result = await session.execute(stmt)
     category = result.scalar_one_or_none()
     if not category:
@@ -320,12 +325,13 @@ async def sub_category_list(
 
 
 @sub_category_router.get("/{sub_category_id}", response_model=SubCategoryRead)
-async def sub_category_list(
+async def sub_category_get(
         sub_category_id: int,
         user: User = Depends(current_user),
         session: AsyncSession = Depends(get_async_session)
 ):
-    stmt = select(SubCategory).join(Category).filter(Category.fk_user_id == user.id).where(SubCategory.id == sub_category_id)
+    stmt = select(SubCategory).join(Category).filter(Category.fk_user_id == user.id).where(
+        SubCategory.id == sub_category_id)
     result = await session.execute(stmt)
     sub_category = result.scalar_one_or_none()
     if not sub_category:
@@ -352,12 +358,14 @@ async def sub_category_update(
         user: User = Depends(current_user),
         session: AsyncSession = Depends(get_async_session)
 ):
-    stmt = select(SubCategory).where(SubCategory.id == sub_category_id)
+    stmt = select(SubCategory).join(Category).filter(Category.fk_user_id == user.id).where(
+        SubCategory.id == sub_category_id)
     result = await session.execute(stmt)
     sub_category = result.scalar_one_or_none()
     if not sub_category:
         raise HTTPException(status_code=404, detail="Sub-category not found")
-    stmt = update(SubCategory).where(SubCategory.id == sub_category_id).values(**sub_category_in_data.model_dump(exclude_unset=True))
+    stmt = update(SubCategory).where(SubCategory.id == sub_category_id).values(
+        **sub_category_in_data.model_dump(exclude_unset=True))
     await session.execute(stmt)
     await session.commit()
     return JSONResponse({"message": "Sub-category successfully updated!"}, status_code=200)
@@ -369,12 +377,87 @@ async def sub_category_update(
         user: User = Depends(current_user),
         session: AsyncSession = Depends(get_async_session)
 ):
-    stmt = select(SubCategory).where(SubCategory.id == sub_category_id)
+    stmt = select(SubCategory).join(Category).filter(Category.fk_user_id == user.id).where(
+        SubCategory.id == sub_category_id)
     result = await session.execute(stmt)
     sub_category = result.scalar_one_or_none()
     if not sub_category:
         raise HTTPException(status_code=404, detail="Sub-category not found")
     stmt = delete(SubCategory).where(SubCategory.id == sub_category_id)
+    await session.execute(stmt)
+    await session.commit()
+    return JSONResponse(status_code=200, content={"message": "Sub-category successfully deleted!"})
+
+
+@operations_router.get("/list", response_model=List[OperationRead])
+async def operation_list(
+        user: User = Depends(current_user),
+        session: AsyncSession = Depends(get_async_session)
+):
+    stmt = select(Operation).where(Operation.fk_user_id == user.id)
+    result = await session.execute(stmt)
+    return result.scalars().all()
+
+
+@operations_router.get("/list/{operation_id}", response_model=OperationRead)
+async def operation_get(
+        operation_id: int,
+        user: User = Depends(current_user),
+        session: AsyncSession = Depends(get_async_session)
+):
+    stmt = select(Operation).where(Operation.fk_user_id == user.id, Operation.id == operation_id)
+    result = await session.execute(stmt)
+    operation = result.scalar_one_or_none()
+    if not operation:
+        raise HTTPException(status_code=404, detail="Operation not found")
+    return operation
+
+
+@operations_router.post("/create")
+async def operation_create(
+        operation_in: OperationCreate,
+        user: User = Depends(current_user),
+        session: AsyncSession = Depends(get_async_session)
+):
+    stmt = insert(Operation).values(fk_user_id=user.id, **operation_in.model_dump())
+    await session.execute(stmt)
+    await session.commit()
+    return JSONResponse(status_code=201, content={"message": "Operation successfully created!"})
+
+
+@operations_router.patch("/update/{operation_id}")
+async def operation_patch(
+        operation_id: int,
+        operation_in_data: OperationUpdate,
+        user: User = Depends(current_user),
+        session: AsyncSession = Depends(get_async_session)
+):
+    stmt = select(Operation).where(Operation.fk_user_id == user.id, Operation.id == operation_id)
+    result = await session.execute(stmt)
+    operation = result.scalar_one_or_none()
+    if not operation:
+        raise HTTPException(status_code=404, detail="Operation not found")
+    if operation.fk_user_id != user.id:
+        raise HTTPException(status_code=403, detail="You don't have permission to update operations of other users.")
+    stmt = update(Operation).where(Operation.id == operation_id).values(
+        **operation_in_data.model_dump(exclude_unset=True))
+    await session.execute(stmt)
+    await session.commit()
+    return JSONResponse({"message": "Operation successfully updated!"}, status_code=200)
+
+
+@operations_router.delete("/delete/{operation_id}")
+async def operation_delete(
+        operation_id: int,
+        user: User = Depends(current_user),
+        session: AsyncSession = Depends(get_async_session)
+):
+    stmt = select(Operation).where(Operation.fk_user_id == user.id, Operation.id == operation_id)
+    result = await session.execute(stmt)
+    operation = result.scalar_one_or_none()
+    if not operation:
+        raise HTTPException(status_code=404, detail="Operation not found.")
+    stmt = delete(Operation).where(Operation.fk_user_id == user.id, Operation.id == operation_id)
     await session.execute(stmt)
     await session.commit()
     return JSONResponse(status_code=200, content={"message": "Sub-category successfully deleted!"})
