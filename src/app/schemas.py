@@ -77,8 +77,8 @@ class CategoryCreate(BaseModel):
 
 
 class CategoryUpdate(BaseModel):
-    name: str
-    image_url: str
+    name: str = None
+    image_url: str = None
 
 
 class SubCategoryRead(BaseModel):
@@ -118,6 +118,6 @@ class OperationCreate(BaseModel):
 
 
 class OperationUpdate(BaseModel):
-    summ: float
-    type: bool
+    summ: float = None
+    type: bool = None
     note: str = None
