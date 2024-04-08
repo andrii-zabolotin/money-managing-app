@@ -1,8 +1,9 @@
+from http.cookies import SimpleCookie
 from typing import AsyncGenerator
 import asyncio
 from httpx import AsyncClient
 import pytest
-from sqlalchemy import NullPool
+from sqlalchemy import NullPool, select
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from starlette.testclient import TestClient
@@ -10,7 +11,7 @@ from starlette.testclient import TestClient
 from src.config import settings
 from src.database import get_async_session
 from src.main import app
-from src.models import Base
+from src.models import Base, User
 
 # Database
 # Creates an asynchronous SQLAlchemy engine for the test database using the URL from the settings object.
@@ -88,3 +89,61 @@ async def ac() -> AsyncGenerator[AsyncClient, None]:
     """
     async with AsyncClient(app=app, base_url="http://test") as ac:
         yield ac
+
+
+@pytest.fixture(scope="session")
+async def authenticated_superuser_cookie():
+    client = TestClient(app)
+    client.post("/auth/register", json={
+        "email": "super@example.com",
+        "password": "string",
+        "is_active": True,
+        "is_superuser": False,
+        "is_verified": False,
+        "username": "string"
+    })
+
+    login_response = client.post("/auth/jwt/login", data={
+        "username": "super@example.com",
+        "password": "string"
+    })
+
+    cookies = SimpleCookie(login_response.headers["set-cookie"])
+
+    async with test_SessionLocal() as session:
+        stmt = select(User).where(User.email == "super@example.com")
+        user = await session.execute(stmt)
+        user = user.scalar_one()
+        user.is_superuser = True
+        await session.commit()
+
+    return {c.key: c.value for c in cookies.values()}
+
+
+@pytest.fixture(scope="session")
+async def authenticated_user_cookie():
+    client = TestClient(app)
+    client.post("/auth/register", json={
+        "email": "user@example.com",
+        "password": "string",
+        "is_active": True,
+        "is_superuser": False,
+        "is_verified": False,
+        "username": "string"
+    })
+
+    login_response = client.post("/auth/jwt/login", data={
+        "username": "user@example.com",
+        "password": "string"
+    })
+
+    cookies = SimpleCookie(login_response.headers["set-cookie"])
+
+    async with test_SessionLocal() as session:
+        stmt = select(User).where(User.email == "user@example.com")
+        user = await session.execute(stmt)
+        user = user.scalar_one()
+        user.is_superuser = True
+        await session.commit()
+
+    return {c.key: c.value for c in cookies.values()}
