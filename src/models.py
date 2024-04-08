@@ -24,10 +24,10 @@ class Currency(Base):
 
 class Account(Base):
     name: Mapped[str] = mapped_column(nullable=False)
-    note: Mapped[str]
+    note: Mapped[str] = mapped_column(nullable=False)
     summ: Mapped[float] = mapped_column(default=0)
     is_savings_account: Mapped[bool] = mapped_column(default=0)
-    image_url: Mapped[str]
+    image_url: Mapped[str] = mapped_column(nullable=False)
     fk_currency_id: Mapped[int] = mapped_column(ForeignKey('currency.id'), nullable=False)
     fk_user_id: Mapped[int] = mapped_column(ForeignKey('user.id'), nullable=False)
 
