@@ -3,7 +3,7 @@ from typing import AsyncGenerator
 import asyncio
 from httpx import AsyncClient
 import pytest
-from sqlalchemy import NullPool, select
+from sqlalchemy import NullPool, select, insert
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from starlette.testclient import TestClient
@@ -11,7 +11,7 @@ from starlette.testclient import TestClient
 from src.config import settings
 from src.database import get_async_session
 from src.main import app
-from src.models import Base, User
+from src.models import Base, User, Currency
 
 # Database
 # Creates an asynchronous SQLAlchemy engine for the test database using the URL from the settings object.
@@ -147,3 +147,47 @@ async def authenticated_user_cookie():
         await session.commit()
 
     return {c.key: c.value for c in cookies.values()}
+
+
+@pytest.fixture(scope="module")
+async def get_or_create_currency_id(ac: AsyncSession):
+    async with test_SessionLocal() as session:
+        currency_data = {
+            "name": "Долар",
+            "symbol": "USD"
+        }
+
+        stmt_1 = select(Currency).where(Currency.name == "Долар", Currency.symbol == "USD")
+        result = await session.execute(stmt_1)
+        currency = result.scalar_one_or_none()
+        if currency:
+            return currency.id
+        stmt_2 = insert(Currency).values(**currency_data)
+        await session.execute(stmt_2)
+        await session.commit()
+        result = await session.execute(stmt_1)
+        currency = result.scalar_one()
+        return currency.id
+
+
+@pytest.fixture(scope="module")
+async def get_or_create_user_id(ac: AsyncSession):
+    async with test_SessionLocal() as session:
+        user_data = {
+            "email": "user@gmail.com",
+            "password": "testpassword",
+            "is_active": True,
+            "is_superuser": False,
+            "is_verified": False,
+            "username": "string"
+        }
+
+        stmt = select(User).where(User.email == "user@gmail.com", User.username == "string")
+        result = await session.execute(stmt)
+        user = result.scalar_one_or_none()
+        if user:
+            return user.id
+        await ac.post("/auth/register", json=user_data)
+        result = await session.execute(stmt)
+        user = result.scalar_one()
+        return user.id
