@@ -26,7 +26,7 @@ class Currency(Base):
 
 class Account(Base):
     name: Mapped[str] = mapped_column(nullable=False)
-    note: Mapped[str] = mapped_column(nullable=False)
+    note: Mapped[str] = mapped_column(nullable=True)
     summ: Mapped[float] = mapped_column(default=0)
     is_savings_account: Mapped[bool] = mapped_column(default=0)
     image_url: Mapped[str] = mapped_column(nullable=True)
@@ -41,7 +41,7 @@ class SavingsAccount(Base):
 
 class Category(Base):
     name: Mapped[str] = mapped_column(nullable=False, unique=False)
-    image_url: Mapped[str]
+    image_url: Mapped[str] = mapped_column(nullable=True)
     fk_currency_id: Mapped[int] = mapped_column(ForeignKey('currency.id'), nullable=False)
     fk_user_id: Mapped[int] = mapped_column(ForeignKey('user.id'), nullable=False)
 
@@ -53,10 +53,10 @@ class SubCategory(Base):
 
 class Operation(Base):
     summ: Mapped[float]
-    time_date: Mapped[datetime]
+    time_date: Mapped[datetime] = mapped_column(default=datetime.now())
     type: Mapped[bool]
     note: Mapped[str] = mapped_column(nullable=True)
     fk_account_id: Mapped[int] = mapped_column(ForeignKey('account.id'), nullable=False)
     fk_category_id: Mapped[int] = mapped_column(ForeignKey('category.id'), nullable=False)
-    fk_sub_category_id: Mapped[int] = mapped_column(ForeignKey('subcategory.id'), nullable=False)
+    fk_sub_category_id: Mapped[int] = mapped_column(ForeignKey('subcategory.id'), nullable=True)
     fk_user_id: Mapped[int] = mapped_column(ForeignKey('user.id'), nullable=False)

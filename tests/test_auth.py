@@ -15,7 +15,6 @@ def test_user_register_success(client: TestClient):
         "is_verified": False,
         "username": "string"
     })
-
     assert response.status_code == 201, "Client wasn't created!"
 
 

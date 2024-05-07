@@ -11,7 +11,7 @@ from starlette.testclient import TestClient
 from src.config import settings
 from src.database import get_async_session
 from src.main import app
-from src.models import Base, User, Currency
+from src.models import Base, User, Currency, Category, Account
 
 # Database
 # Creates an asynchronous SQLAlchemy engine for the test database using the URL from the settings object.
@@ -93,15 +93,21 @@ async def ac() -> AsyncGenerator[AsyncClient, None]:
 
 @pytest.fixture(scope="session")
 async def authenticated_superuser_cookie():
-    client = TestClient(app)
-    client.post("/auth/register", json={
-        "email": "super@example.com",
-        "password": "string",
-        "is_active": True,
-        "is_superuser": False,
-        "is_verified": False,
-        "username": "string"
-    })
+    async with test_SessionLocal() as session:
+        stmt = select(User).where(User.email == "super@example.com")
+        response = await session.execute(stmt)
+        user = response.scalar_one_or_none()
+
+        if not user:
+            client = TestClient(app)
+            client.post("/auth/register", json={
+                "email": "super@example.com",
+                "password": "string",
+                "is_active": True,
+                "is_superuser": False,
+                "is_verified": False,
+                "username": "string"
+            })
 
     login_response = client.post("/auth/jwt/login", data={
         "username": "super@example.com",
@@ -110,27 +116,33 @@ async def authenticated_superuser_cookie():
 
     cookies = SimpleCookie(login_response.headers["set-cookie"])
 
-    async with test_SessionLocal() as session:
-        stmt = select(User).where(User.email == "super@example.com")
-        user = await session.execute(stmt)
-        user = user.scalar_one()
-        user.is_superuser = True
-        await session.commit()
+
+    stmt = select(User).where(User.email == "super@example.com")
+    user = await session.execute(stmt)
+    user = user.scalar_one()
+    user.is_superuser = True
+    await session.commit()
 
     return {c.key: c.value for c in cookies.values()}
 
 
 @pytest.fixture(scope="session")
 async def authenticated_user_cookie():
-    client = TestClient(app)
-    client.post("/auth/register", json={
-        "email": "user@example.com",
-        "password": "string",
-        "is_active": True,
-        "is_superuser": False,
-        "is_verified": False,
-        "username": "string"
-    })
+    async with test_SessionLocal() as session:
+        stmt = select(User).where(User.email == "user@example.com")
+        response = await session.execute(stmt)
+        user = response.scalar_one_or_none()
+
+        if not user:
+            client = TestClient(app)
+            client.post("/auth/register", json={
+                "email": "user@example.com",
+                "password": "string",
+                "is_active": True,
+                "is_superuser": False,
+                "is_verified": False,
+                "username": "string"
+            })
 
     login_response = client.post("/auth/jwt/login", data={
         "username": "user@example.com",
@@ -139,18 +151,11 @@ async def authenticated_user_cookie():
 
     cookies = SimpleCookie(login_response.headers["set-cookie"])
 
-    async with test_SessionLocal() as session:
-        stmt = select(User).where(User.email == "user@example.com")
-        user = await session.execute(stmt)
-        user = user.scalar_one()
-        user.is_superuser = True
-        await session.commit()
-
     return {c.key: c.value for c in cookies.values()}
 
 
-@pytest.fixture(scope="module")
-async def get_or_create_currency_id(ac: AsyncSession):
+@pytest.fixture(scope="function")
+async def get_or_create_currency_id():
     async with test_SessionLocal() as session:
         currency_data = {
             "name": "Долар",
@@ -170,24 +175,71 @@ async def get_or_create_currency_id(ac: AsyncSession):
         return currency.id
 
 
-@pytest.fixture(scope="module")
-async def get_or_create_user_id(ac: AsyncSession):
+@pytest.fixture(scope="function")
+async def get_or_create_user_id():
     async with test_SessionLocal() as session:
         user_data = {
-            "email": "user@gmail.com",
-            "password": "testpassword",
+            "email": "user@example.com",
+            "hashed_password": "string",
             "is_active": True,
             "is_superuser": False,
             "is_verified": False,
             "username": "string"
         }
 
-        stmt = select(User).where(User.email == "user@gmail.com", User.username == "string")
+        stmt = select(User).where(User.email == "user@example.com", User.username == "string")
         result = await session.execute(stmt)
         user = result.scalar_one_or_none()
         if user:
             return user.id
-        await ac.post("/auth/register", json=user_data)
+        await session.execute(insert(User).values(**user_data))
+        await session.commit()
         result = await session.execute(stmt)
         user = result.scalar_one()
         return user.id
+
+
+@pytest.fixture(scope="function")
+async def get_or_create_category_id(get_or_create_currency_id, get_or_create_user_id):
+    async with test_SessionLocal() as session:
+        category_data = {
+            "name": "Приват",
+            "fk_currency_id": get_or_create_currency_id,
+            "fk_user_id": get_or_create_user_id,
+        }
+
+        stmt = select(Category).where(Category.name == "Приват", Category.fk_currency_id == get_or_create_currency_id, Category.fk_user_id == get_or_create_user_id)
+        result = await session.execute(stmt)
+        category = result.scalar_one_or_none()
+        if category:
+            return category.id
+        await session.execute(insert(Category).values(**category_data))
+        await session.commit()
+        result = await session.execute(stmt)
+        category = result.scalar_one()
+        return category.id
+
+
+@pytest.fixture(scope="function")
+async def get_or_create_account_id(get_or_create_currency_id, get_or_create_user_id):
+    async with test_SessionLocal() as session:
+        account_data = {
+            "name": "MonoBank",
+            "fk_currency_id": get_or_create_currency_id,
+            "fk_user_id": get_or_create_user_id,
+        }
+
+        stmt = select(Account).where(
+            Account.name == "MonoBank",
+            Account.fk_currency_id == get_or_create_currency_id,
+            Account.fk_user_id == get_or_create_user_id,
+        )
+        result = await session.execute(stmt)
+        account = result.scalar_one_or_none()
+        if account:
+            return account.id
+        await session.execute(insert(Account).values(account_data))
+        await session.commit()
+        result = await session.execute(stmt)
+        account = result.scalar_one_or_none()
+        return account.id
