@@ -10,6 +10,7 @@ class SavingsAccountService:
 
             account_values = data_in.pop("account")
             account = await uow.account.add(values=account_values, user_id=user_id)
+            account.is_savings_account = True
 
             savings_values = data_in
             savings_values["fk_account_id"] = account.id

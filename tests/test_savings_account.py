@@ -15,7 +15,6 @@ class TestSavingsAccount:
                 "name": "string",
                 "note": "string",
                 "summ": 0,
-                "is_savings_account": False,
                 "image_url": "string",
                 "fk_currency_id": get_or_create_currency_id
             },
