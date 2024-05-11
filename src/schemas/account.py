@@ -18,7 +18,6 @@ class AccountCreate(BaseModel):
     name: str
     note: Optional[str] = None
     summ: float = 0
-    is_savings_account: bool = False
     image_url: Optional[str] = None
     fk_currency_id: int
 
