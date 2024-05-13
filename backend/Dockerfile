@@ -6,7 +6,7 @@ ENV POETRY_NO_INTERACTION=1 \
 
 RUN pip install poetry
 
-COPY pyproject.toml poetry.lock alembic.ini /app/
+COPY ../pyproject.toml poetry.lock alembic.ini /app/
 WORKDIR /app
 EXPOSE 8000
 

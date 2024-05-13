@@ -10,7 +10,7 @@ from starlette.testclient import TestClient
 
 from src.config import settings
 from src.database import get_async_session
-from src.main import app
+from backend.src.main import app
 from src.models import Base, User, Currency, Category, Account
 
 # Database

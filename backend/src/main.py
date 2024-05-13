@@ -12,7 +12,7 @@ app = FastAPI(
     title="Money Managing App"
 )
 
-app.mount("/static", StaticFiles(directory="src/static"), name="static")
+app.mount("static", StaticFiles(directory="src/static"), name="static")
 
 
 app.include_router(
